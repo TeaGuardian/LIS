@@ -1,0 +1,31 @@
+help==help - даёт информацию о предшествующем наборе указателей\ninfo - информация о боте\nget - запрос на получение\nset - запрос на изменение\noff - закрыть соединение\non - открыть соединение\nlist - список доступных командлетов
+list==[help] [info] [get] [set] [off] [on] [list] [check]
+off help==off - закрывает соединение с потоком бота
+on help==on - открывает соединение с потоком бота
+list help==даёт список доступных командлетов для предшествующего набора указателей
+help help==слишком глубоко, семпай! (⁄ ⁄>⁄~⁄<⁄ ⁄)
+info==version: 0.0.0\ndevelopers: Tea Guardian (vk id654275850)\nupdated: 31.01.2023
+info help==info - даёт информацию о боте
+check help==??? -> !!!
+check list==[phrase]
+get help==get - запрос на получение; синтаксис: get [имя параметра]; пример: get user.notify
+get list==[user.notify] [user.local_name] [total_list] [database]
+get user.notify help==get user.notify - настройка.уведомлять_юзера_о_запуске_бота
+get user.local_name help==get user.local_name - имя пользователя
+get user.local_name list==любая строка
+get user.total_list help==get user.total_list - список настроек
+get user.total_list list==haven`t arguments
+set help==set - изменяет значение; синтаксис: set [имя параметра] [значение]; пример: set user.notify true
+set list==[user.notify] [user.local_name] [phrase]
+set user.notify help==set user.notify - настройка.уведомлять_юзера_о_запуске_бота
+set user.notify list==[True] [False]
+set user.local_name help==set user.local_name - имя пользователя
+set user.local_name list==любая строка
+set user.total_list help==set user.total_list - список настроек
+set phrase help==добавить словосочетание из двух слов в базу данных
+set phrase list==[russian word] [russian word]
+check phrase help==найти словосочетания в предложении
+check phrase list==[russian word] [russian word] ... [russian word]
+shutdown help==admin command
+delete phrase help==admin command
+get database help==all bot data
