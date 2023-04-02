@@ -29,3 +29,5 @@ check phrase list==[russian word] [russian word] ... [russian word]
 shutdown help==admin command
 delete phrase help==admin command
 get database help==all bot data
+switch yandex help==переключает на тестирование задач яндекса
+switch yandex list==[Запрос Записи на стене]

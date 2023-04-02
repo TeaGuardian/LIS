@@ -1,6 +1,6 @@
 import requests.exceptions
 from data import token, my_token
-from lis import Morpher
+from lis import Morpher, distance
 from datetime import datetime, timedelta
 from random import randint
 import os
@@ -138,6 +138,10 @@ class User_session:
             GrayList.append(str(self.id))
             self.save_list("settings/graylist.txt", GrayList)
             Users.pop(str(self.id))
+        elif "switch yandex " in command and not fl:
+            user = YandexTestTask(self.id, command, self.sender, command.lstrip("switch yandex "))
+            if user.try_init():
+                Users[str(self.id)] = user
         elif "set user." in command and not fl:
             self.sender.messages.send(user_id=self.id, message=si + self.user_set_com(command), random_id=randint(1, 200000))
         elif "get user." in command and not fl:
@@ -216,6 +220,136 @@ class User_session:
         global mor
         print(">>2")
         return mor.all_data()
+
+
+class YandexTestTask:
+    def __init__(self, user_id, message, sender, task):
+        self.id, self.last_active, self.last_message = user_id, datetime.now(), message
+        self.sender, self.help, self.counter_ban, self.active_ban = sender, {}, 0, datetime.now()
+        self.set_pach, self.poj, self.new, self.task = f"users/{self.id}.data", "==", True, task.lower()
+        self.tasks = {"запрос записи на стене": self.get_notes, 'запрос сортированные друзья': self.get_friends,
+                      "бот большой брат": self.big_brother}
+        user_get, self.nsls = sender.users.get(user_ids=(user_id))[0], False
+        name = "traveler" if 'first_name' not in user_get.keys() else user_get['first_name']
+        self.data = {'notify': "False", 'local_name': name}
+        self.data_re = {'notify': lambda gr: gr in ["True", "False"], 'local_name': lambda gr: True}
+        if os.path.exists(self.set_pach):
+            self.new = False
+            self.import_set()
+
+    def import_set(self):
+        self.procreate(self.set_pach)
+        with open(file=self.set_pach, mode="r+", encoding=ENC) as file:
+            for i in file.readlines():
+                i = i.rstrip("\n")
+                arg, rez = i.split(self.poj)
+                self.data[arg] = rez
+
+    def save(self):
+        with open(file=self.set_pach, mode="w+", encoding=ENC) as file:
+            rez = list(map(lambda i: f"{i}{self.poj}{self.data[i]}", self.data.keys()))
+            file.write("\n".join(rez))
+
+    def save_list(self, patch, lis):
+        with open(file=patch, mode='w+', encoding=ENC) as file:
+            file.write("\n".join(lis))
+
+    def try_init(self) -> bool:
+        si = "<LIS YandexTestMode>\n"
+        if is_banned(self.id):
+            return False
+        for na, va in map(lambda g: g.split(self.poj), self.deparse("settings/helplist.txt")):
+            self.help[na] = "\n".join(va.split("\\n"))
+        if str(self.id) in BlackList:
+            return False
+        if self.task not in self.tasks.keys():
+            req = sorted(self.tasks.keys(), reverse=True, key=lambda wo: distance(wo, self.task))
+            mes = si + f"Не найдено, это случаем не 'switch yandex {req[0]}'? [да]-[нет]"
+            self.nsls = True
+        else:
+            mes = si + f"Hi, {self.data['local_name']}!✨\nYou are in YandexTestMode. Type 'off' to exit."
+        self.sender.messages.send(user_id=self.id, message=mes, random_id=randint(1, 200000))
+        return True
+
+    def procreate(self, patch):
+        if not try_open(patch):
+            with open(file=patch, mode='w+', encoding=ENC) as fi:
+                pass
+
+    def deparse(self, patch):
+        self.procreate(patch)
+        with open(file=patch, mode='r+', encoding=ENC) as file:
+            rez = list(map(lambda i: i.rstrip("\n"), file.readlines()))
+        return rez
+
+    def command_selector(self, command):
+        si = "<LIS YandexTestMode>\n"
+        fl, self.last_active = is_banned(self.id), datetime.now()
+        tf = (datetime.now() - self.active_ban) > timedelta(minutes=1)
+        if not fl:
+            if self.counter_ban == 0 or self.counter_ban < 1:
+                self.active_ban, self.counter_ban = datetime.now(), 1
+            elif self.counter_ban > 0 and not tf:
+                self.counter_ban += 1
+            if tf:
+                self.counter_ban = 0
+            if self.counter_ban > 10:
+                ban(self.id)
+                self.counter_ban = 0
+                self.sender.messages.send(user_id=self.id, message=si + "you are banned for 20 minutes",
+                                          random_id=randint(1, 200000))
+        print(command)
+        if not fl and self.nsls:
+            if command.lower() in ['yes', 'run', 'да']:
+                self.task = sorted(self.tasks.keys(), reverse=True, key=lambda wo: distance(wo, self.task))[0]
+                self.nsls, command = False, "run"
+            elif "switch" not in command:
+                command = "off"
+        if ("help" in command or "info" == command or "list" in command) and not fl:
+            self.help_command(command)
+        elif "off" == command:
+            self.sender.messages.send(user_id=self.id, message=si + "finishing testing mode!", random_id=randint(1, 200000))
+            Users.pop(str(self.id))
+        elif "switch yandex " in command and not fl:
+            Users[str(self.id)] = YandexTestTask(self.id, command, self.sender, command.lstrip("switch yandex "))
+        elif not fl:
+            self.sender.messages.send(user_id=self.id, message=si + self.tasks[self.task](command), random_id=randint(1, 200000))
+
+    def help_command(self, command):
+        si = "<LIS YandexTestMode>\n"
+        if command in self.help.keys():
+            self.sender.messages.send(user_id=self.id, message=si + self.help[command], random_id=randint(1, 200000))
+        else:
+            self.sender.messages.send(user_id=self.id, message=si + f"no match for [{command}] in help list",
+                                      random_id=randint(1, 200000))
+
+    def get_notes(self, com):
+        if "run" not in com:
+            return "use 'run' to start code or 'off' to exit"
+        posts, rez = self.sender.wall.get(owner_id=str(ADMIN), count=5)['items'], []
+        for ip in range(3 if len(posts) >= 3 else len(posts)):
+            post = posts[ip]
+            time = datetime.utcfromtimestamp(int(post['date'])).strftime('date: {%Y-%m-%d} time:{%H:%M:%S}')
+            rez.append("{" + f"{post['text']}" + "};\n" + time)
+        return "3 latest's posts:\n" + "\n<-------------->\n".join(rez)
+
+    def get_friends(self, com):
+        if "run" not in com:
+            return "use 'run' to start code or 'off' to exit"
+        fr = self.sender.friends.get(fields="bdate")
+        rez = []
+        if fr['items']:
+            for i in fr['items']:
+                bir = i['bdate'] if "bdate" in i.keys() else "NOT STATED"
+                rez.append(f"friend-id: {i['id']};\nФамилия: {i['last_name']};\nИмя: {i['first_name']};\nДень рождения: {bir};")
+        return "ALL FRIENDS:\n" + "\n<-------------->\n".join(rez)
+
+    def big_brother(self, com):
+        town = "\n"
+        response = self.sender.users.get(user_id=self.id, fields="city")
+        if 'city' in response:
+            town += f"Как там {response['city']['title']}?"
+        return f"Привет, {self.data['local_name']}!" + town
 
 
 def work_with_user(event, vk):
