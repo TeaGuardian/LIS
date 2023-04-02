@@ -339,7 +339,7 @@ class YandexTestTask:
         fr = self.sender.friends.get(fields="bdate")
         rez = []
         if fr['items']:
-            for i in fr['items']:
+            for i in sorted(fr['items'], reverse=True, key=lambda gg: gg['last_name']):
                 bir = i['bdate'] if "bdate" in i.keys() else "NOT STATED"
                 rez.append(f"friend-id: {i['id']};\nФамилия: {i['last_name']};\nИмя: {i['first_name']};\nДень рождения: {bir};")
         return "ALL FRIENDS:\n" + "\n<-------------->\n".join(rez)
