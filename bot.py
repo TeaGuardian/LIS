@@ -263,7 +263,7 @@ class YandexTestTask:
         if str(self.id) in BlackList:
             return False
         if self.task not in self.tasks.keys():
-            req = sorted(self.tasks.keys(), reverse=True, key=lambda wo: distance(wo, self.task))
+            req = sorted(self.tasks.keys(), reverse=False, key=lambda wo: distance(wo, self.task))
             mes = si + f"Не найдено, это случаем не 'switch yandex {req[0]}'? [да]-[нет]"
             self.nsls = True
         else:
@@ -301,7 +301,7 @@ class YandexTestTask:
         print(command)
         if not fl and self.nsls:
             if command.lower() in ['yes', 'run', 'да']:
-                self.task = sorted(self.tasks.keys(), reverse=True, key=lambda wo: distance(wo, self.task))[0]
+                self.task = sorted(self.tasks.keys(), reverse=False, key=lambda wo: distance(wo, self.task))[0]
                 self.nsls, command = False, "run"
             elif "switch" not in command:
                 command = "off"
@@ -339,7 +339,7 @@ class YandexTestTask:
         fr = self.sender.friends.get(fields="bdate")
         rez = []
         if fr['items']:
-            for i in sorted(fr['items'], reverse=True, key=lambda gg: gg['last_name']):
+            for i in sorted(fr['items'], reverse=False, key=lambda gg: gg['last_name']):
                 bir = i['bdate'] if "bdate" in i.keys() else "NOT STATED"
                 rez.append(f"friend-id: {i['id']};\nФамилия: {i['last_name']};\nИмя: {i['first_name']};\nДень рождения: {bir};")
         return "ALL FRIENDS:\n" + "\n<-------------->\n".join(rez)
