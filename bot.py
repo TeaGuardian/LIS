@@ -1,6 +1,6 @@
 import requests.exceptions
 from data import token, my_token
-from lis import Morpher, distance
+from lis import Morpher, distance, limited_text_split
 from datetime import datetime, timedelta
 from random import randint
 import os
@@ -223,6 +223,7 @@ class User_session:
 
 
 class YandexTestTask:
+    si = "<LIS YandexTestMode>\n"
     def __init__(self, user_id, message, sender, task):
         self.id, self.last_active, self.last_message = user_id, datetime.now(), message
         self.sender, self.help, self.counter_ban, self.active_ban = sender, {}, 0, datetime.now()
@@ -313,7 +314,7 @@ class YandexTestTask:
         elif "switch yandex " in command and not fl:
             Users[str(self.id)] = YandexTestTask(self.id, command, self.sender, command.lstrip("switch yandex "))
         elif not fl:
-            self.sender.messages.send(user_id=self.id, message=si + self.tasks[self.task](command), random_id=randint(1, 200000))
+            self.tasks[self.task](command)
 
     def help_command(self, command):
         si = "<LIS YandexTestMode>\n"
@@ -325,24 +326,30 @@ class YandexTestTask:
 
     def get_notes(self, com):
         if "run" not in com:
-            return "use 'run' to start code or 'off' to exit"
+            self.sender.messages.send(user_id=self.id, message=self.si + "use 'run' to start code or 'off' to exit", random_id=randint(1, 200000))
+            return 0
         posts, rez = self.sender.wall.get(owner_id=str(ADMIN), count=5)['items'], []
         for ip in range(3 if len(posts) >= 3 else len(posts)):
             post = posts[ip]
             time = datetime.utcfromtimestamp(int(post['date'])).strftime('date: {%Y-%m-%d} time:{%H:%M:%S}')
             rez.append("{" + f"{post['text']}" + "};\n" + time)
-        return "3 latest's posts:\n" + "\n<-------------->\n".join(rez)
+        self.sender.messages.send(user_id=self.id, message=self.si + "3 latest's posts:\n" + "\n<-------------->\n".join(rez), random_id=randint(1, 200000))
+        return 1
 
     def get_friends(self, com):
         if "run" not in com:
-            return "use 'run' to start code or 'off' to exit"
+            self.sender.messages.send(user_id=self.id, message=self.si + "use 'run' to start code or 'off' to exit",
+                                      random_id=randint(1, 200000))
+            return 0
         fr = self.sender.friends.get(fields="bdate")
         rez = []
         if fr['items']:
             for i in sorted(fr['items'], reverse=False, key=lambda gg: gg['last_name']):
                 bir = i['bdate'] if "bdate" in i.keys() else "NOT STATED"
                 rez.append(f"friend-id: {i['id']};\nФамилия: {i['last_name']};\nИмя: {i['first_name']};\nДень рождения: {bir};")
-        return "ALL FRIENDS:\n" + "\n<-------------->\n".join(rez)
+        self.sender.messages.send(user_id=self.id, message=self.si + "ALL FRIENDS:\n", random_id=randint(1, 200000))
+        for i in limited_text_split(4000, "\n<-------------->\n".join(rez), splittor="\n"):
+            self.sender.messages.send(user_id=self.id, message=i, random_id=randint(1, 200000))
 
     def big_brother(self, com):
         town = "\n"

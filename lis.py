@@ -3,6 +3,48 @@ import sqlite3
 morph = pymorphy2.MorphAnalyzer()
 
 
+def limited_text_split(lsmax, text, splittor=" ", ignos=" "):
+    trf, lp, ste = lsmax // 2, 0, 0
+    if lsmax < 8:
+        print("too small")
+    rez, line = [], ""
+    for si in text:
+        if si == ignos and ste == 0:
+            continue
+        if si == splittor:
+            lp = ste
+        if len(line) >= lsmax:
+            if ste - lp > trf or ste - lp == 0:
+                rez.append(line)
+                line, ste, lp = "", -1, 0
+            else:
+                rez.append(line[:lp])
+                line += si
+                line, ste, lp = line[lp + 1:], len(line[lp + 1:]) - 1, 0
+        else:
+            line += si
+        ste += 1
+    if line:
+        rez.append(line)
+    return rez
+
+
+def distance(a, b):
+    n, m = len(a), len(b)
+    if n > m:
+        a, b = b, a
+        n, m = m, n
+    current_row = range(n + 1)
+    for i in range(1, m + 1):
+        previous_row, current_row = current_row, [i] + [0] * n
+        for j in range(1, n + 1):
+            add, delete, change = previous_row[j] + 1, current_row[j - 1] + 1, previous_row[j - 1]
+            if a[j - 1] != b[i - 1]:
+                change += 1
+            current_row[j] = min(add, delete, change)
+    return current_row[n]
+
+
 class Morpher:
     deparlist = {"NOUN": "существительное", "ADJF": "прилагательное (полное)", "ADJS": "прилагательное (краткое)",
                  "COMP": "компаратив", "VERB": "глагол (личная форма)", "INFN": "глагол (инфинитив)",
